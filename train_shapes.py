@@ -18,7 +18,9 @@ from PIL import Image
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 ROOT_DIR = os.getcwd()
+# 保存产生的日志和已训练的权重文件
 MODEL_DIR = os.path.join(ROOT_DIR , "logs")
+# 权重文件
 COCO_MODEL_PATH = os.path.join(ROOT_DIR , "mask_rcnn_coco.h5")
 
 
@@ -296,8 +298,7 @@ for image_id in image_ids:
     image = dataset_train.load_image(image_id)
     mask, class_ids = dataset_train.load_mask(image_id)
     visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
-    
-# Create model in training mode
+
 print(MODEL_DIR)
 model = modellib.MaskRCNN(mode="training", config=config,
                           model_dir=MODEL_DIR)
@@ -307,29 +308,20 @@ init_with = "coco"  # imagenet, coco, or last
 if init_with == "imagenet":
     model.load_weights(model.get_imagenet_weights(), by_name=True)
 elif init_with == "coco":
-    # Load weights trained on MS COCO, but skip layers that
-    # are different due to the different number of classes
-    # See README for instructions to download the COCO weights
+    # 加载coco权重，但是跳过由于不同类别的层
     model.load_weights(COCO_MODEL_PATH, by_name=True,
                        exclude=["mrcnn_class_logits", "mrcnn_bbox_fc",
                                 "mrcnn_bbox", "mrcnn_mask"])
 elif init_with == "last":
     # Load the last model you trained and continue training
     model.load_weights(model.find_last()[1], by_name=True)
-    
-# Train the head branches
-# Passing layers="heads" freezes all layers except the head
-# layers. You can also pass a regular expression to select
-# which layers to train by name pattern.
+
 model.train(dataset_train, dataset_val,
             learning_rate=config.LEARNING_RATE,
             epochs=1,
             layers='heads')
 
-# Fine tune all layers
-# Passing layers="all" trains all layers. You can also
-# pass a regular expression to select which layers to
-# train by name pattern.
+# 微调所有层
 model.train(dataset_train, dataset_val,
             learning_rate=config.LEARNING_RATE / 10,
             epochs=2,
