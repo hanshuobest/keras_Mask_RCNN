@@ -14,6 +14,7 @@ import visualize
 from model import log
 import yaml
 from PIL import Image
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 ROOT_DIR = os.getcwd()
@@ -152,9 +153,12 @@ height = 800
 
 #train与val数据集准备
 dataset_train = DrugDataset()
-dataset_train.load_shapes(count, 800, 1280, img_floder, mask_floder, imglist,dataset_root_path)
+dataset_train.load_shapes(count, height, width, img_floder, mask_floder, imglist,dataset_root_path)
 dataset_train.prepare()
 
+dataset_val = DrugDataset()
+dataset_val.load_shapes(count, 800, 1280, img_floder, mask_floder, imglist,dataset_root_path)
+dataset_val.prepare()
 
 # class ShapesDataset(utils.Dataset):
 #     """Generates the shapes synthetic dataset. The dataset consists of simple
