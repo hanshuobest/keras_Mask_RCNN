@@ -6,7 +6,7 @@ Copyright (c) 2017 Matterport, Inc.
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
 """
-
+# -*- coding= utf-8 -*-
 import sys
 import os
 import math
@@ -28,6 +28,7 @@ def extract_bboxes(mask):
 
     Returns: bbox array [num_instances, (y1, x1, y2, x2)].
     """
+    # mask.shape[-1]
     boxes = np.zeros([mask.shape[-1], 4], dtype=np.int32)
     for i in range(mask.shape[-1]):
         m = mask[:, :, i]
@@ -46,7 +47,6 @@ def extract_bboxes(mask):
             x1, x2, y1, y2 = 0, 0, 0, 0
         boxes[i] = np.array([y1, x1, y2, x2])
     return boxes.astype(np.int32)
-
 
 def compute_iou(box, boxes, box_area, boxes_area):
     """Calculates IoU of the given box with the array of the given boxes.
