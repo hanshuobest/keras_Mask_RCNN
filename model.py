@@ -39,7 +39,7 @@ assert LooseVersion(keras.__version__) >= LooseVersion('2.0.8')
 ############################################################
 #  Utility Functions
 ############################################################
-
+# 打印文本信息，并且可选打印Numpy数组，可以打印数组的shape、最大和最小值
 def log(text, array=None):
     """Prints a text message. And, optionally, if a Numpy array is provided it
     prints it's shape, min, and max values.
@@ -52,7 +52,7 @@ def log(text, array=None):
             array.max() if array.size else ""))
     print(text)
 
-
+# 继承自keras的批归一化类
 class BatchNorm(KL.BatchNormalization):
     """Batch Normalization class. Subclasses the Keras BN class and
     hardcodes training=False so the BN layer doesn't update
@@ -220,9 +220,10 @@ def clip_boxes_graph(boxes, window):
     y2 = tf.maximum(tf.minimum(y2, wy2), wy1)
     x2 = tf.maximum(tf.minimum(x2, wx2), wx1)
     clipped = tf.concat([y1, x1, y2, x2], axis=1, name="clipped_boxes")
+    print('clipped:' , clipped.shape)
     return clipped
 
-
+# 自定义层
 class ProposalLayer(KE.Layer):
     """Receives anchor scores and selects a subset to pass as proposals
     to the second stage. Filtering is done based on anchor scores and
@@ -429,6 +430,7 @@ class PyramidROIAlign(KE.Layer):
 
 def overlaps_graph(boxes1, boxes2):
     """Computes IoU overlaps between two sets of boxes.
+    计算两组框的重叠部分
     boxes1, boxes2: [N, (y1, x1, y2, x2)].
     """
     # 1. Tile boxes2 and repeate boxes1. This allows us to compare
@@ -510,6 +512,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, gt_masks, config)
 
     # Compute overlaps with crowd boxes [anchors, crowds]
     crowd_overlaps = overlaps_graph(proposals, crowd_boxes)
+    # 求某一维度上的最大值
     crowd_iou_max = tf.reduce_max(crowd_overlaps, axis=1)
     no_crowd_bool = (crowd_iou_max < 0.001)
 
@@ -542,6 +545,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, gt_masks, config)
 
     # Assign positive ROIs to GT boxes.
     positive_overlaps = tf.gather(overlaps, positive_indices)
+    # 返回每行最大值的列号
     roi_gt_box_assignment = tf.argmax(positive_overlaps, axis=1)
     roi_gt_boxes = tf.gather(gt_boxes, roi_gt_box_assignment)
     roi_gt_class_ids = tf.gather(gt_class_ids, roi_gt_box_assignment)
@@ -579,6 +583,7 @@ def detection_targets_graph(proposals, gt_class_ids, gt_boxes, gt_masks, config)
 
     # Threshold mask pixels at 0.5 to have GT masks be 0 or 1 to use with
     # binary cross entropy loss.
+    # 最接近的整数
     masks = tf.round(masks)
 
     # Append negative ROIs and pad bbox deltas and masks that
@@ -1735,8 +1740,8 @@ class MaskRCNN():
         """
         assert mode in ['training', 'inference']
         self.mode = mode
-        self.config = config
-        self.model_dir = model_dir
+        self.config = config # 配置文件
+        self.model_dir = model_dir # 日志和模型文件保存目录
         self.set_log_dir()
         self.keras_model = self.build(mode=mode, config=config)
 
@@ -1749,6 +1754,7 @@ class MaskRCNN():
         assert mode in ['training', 'inference']
 
         # Image size must be dividable by 2 multiple times
+        # 图像尺寸必须可以被64整除
         h, w = config.IMAGE_SHAPE[:2]
         if h / 2**6 != int(h / 2**6) or w / 2**6 != int(w / 2**6):
             raise Exception("Image size must be dividable by 2 at least 6 times "
